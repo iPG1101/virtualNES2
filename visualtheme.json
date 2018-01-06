@@ -1,8 +1,8 @@
 {
   "name": "iPhoneGuy1101's Repo",
-  "themes": ['default.vt'],
+  "themes": ["default.vt"],
   "roms": [
-    {'Super Mario Bros 3': 'roms/Super Mario Bros 3 (E).nes'},
-    {'Tetris': 'roms/Tetris (USA).nes'}
+    {"Super Mario Bros 3": "roms/Super Mario Bros 3 (E).nes"},
+    {"Tetris": "roms/Tetris (USA).nes"}
   ]
 }

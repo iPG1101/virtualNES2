@@ -1,6 +1,8 @@
 # virtualNES (Customizable* NES for mobile phones)
-
-
+  
+  Tested with NodeJS 9.3 - but 8.x and later are going to work for sure, older idk
+  
+  
    I decided since I was playing around with NES games, to make them work on my phone. It is based off of <a href='https://www.github.com/koenkivits/nesnes'>koenkivit's New ECMA Script Nintendo Entertainment System emulator (NESNes for short).</a>
 
    Please make themes and send them to me (a controller png is enough, just draw a cutout for game's `<canvas>`)

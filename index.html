@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>vrNES</title>
+	<meta name='mobile-web-app-capable' content='yes' />
+	<!--  Because Tim Cook has to be a mental fuckhead...  -->
+	<meta name='apple-mobile-web-app-capable' content='yes' />
+	<meta name='apple-mobile-web-app-title' content='vrNES' />
+	<!--End fuckhead issues - Is a merical godfuckingdammit-->
+	<style>
+		body{
+			overflow: hidden;
+		}
+		canvas {
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+		}
+	</style>
+</head>
+<body>
+	<script src='node_modules/nesnes/dist/nesnes.js'></script>
+	<script>
+		let wd, hd;
+		const canvas = document.createElement('canvas');
+		const context = canvas.getContext('2d');
+		let NES;
+		document.body.appendChild(canvas);
+		canvas.width = 1334;
+		canvas.height = 750;
+		let ctrl_theme, ctrl_map, background;
+		const loadTheme = function(pack = '/default.vt', onload = function(){}){
+			let theme = new XMLHttpRequest;
+			theme.onreadystatechange = function(){
+				if(this.readyState == 4 && this.status == 200) {
+					try {
+						ctrl_theme = JSON.parse(theme.responseText);
+					} catch(e) {
+						let er = ("Error: \nThis theme is either invalid JSON, or unaccessable at the moment. Please try again later. \n\nError info:\n  "+e.message);
+						alert(er);
+						throw new Error(er); return new Error(er);
+					}
+					background = new Image();
+					background.src = pack + '/' + ctrl_theme.controller_textures.horizantal;
+					background.onload = function(){
+						context.drawImage(background, 0, 0, 1334, 750);
+						let mapLoader = new XMLHttpRequest;
+						mapLoader.open("GET", pack + '/' + ctrl_theme.controller_textures.map);
+						mapLoader.onreadystatechange = function(){
+							if(this.readyState == 4 && this.status == 200) {
+								try{
+									ctrl_map = JSON.parse(mapLoader.responseText);
+								} catch(e){
+									let er = ("Error: \nThis theme's map is either invalid JSON, or unaccessable at the moment. Please try again later. \n\nError info:\n  "+e.message);
+									alert(er);
+									throw new Error(er); return new Error(er);
+								}
+								onload(ctrl_theme, ctrl_map);
+							}
+						};
+						mapLoader.send(null);
+					};
+				}
+			};
+			theme.open("GET", pack+"/theme.json", true);
+			theme.send(null);
+		};
+		loadTheme('default.vt', function(theme, map){
+			const gamecanvas = document.createElement('canvas');
+			gamecanvas.style.position = 'absolute';
+			window.onresize = function() {
+					wd = window.innerWidth / 1334;
+					hd = window.innerHeight / 750;
+				gamecanvas.style.left = Math.floor(wd * map.horizantal.canvas[0]) + 'px';
+				gamecanvas.style.top = Math.floor(hd * map.horizantal.canvas[1]) + 'px';
+				gamecanvas.width = 256;
+				gamecanvas.height = 240;
+				gamecanvas.style.width = Math.floor(wd * map.horizantal.canvas[2]) + 'px';
+				gamecanvas.style.height = Math.floor(hd * map.horizantal.canvas[3]) + 'px';
+			};
+			const click = function(x,y,s){
+				x/=wd;
+				y/=hd;
+				for(let button in map.horizantal) {
+					if(button != 'canvas') {
+						let b = map.horizantal[button];
+						if(x > b[0] && x < b[0] + b[2]
+						&& y > b[1] && y < b[1] + b[3]) {
+							console.log(button, b)
+							NES.input.inputHandlers[0]['keyboard'][s ? 'press' : 'depress'](button);
+						};
+					}
+				}
+			};
+			canvas.ontouchstart = function(e){
+				e.preventDefault();
+				for(let tap of e.changedTouches) {
+					click(tap.pageX, tap.pageY, true);
+				}
+			};
+			canvas.ontouchend = function(e){
+				e.preventDefault();
+				for(let tap of e.changedTouches) {
+					click(tap.pageX, tap.pageY, false);
+				}
+			};
+			canvas.onmousedown = function(e){
+				e.preventDefault();
+				click(e.pageX, e.pageY, true);
+			};
+			canvas.onmouseup = function(e){
+				e.preventDefault();
+				click(e.pageX, e.pageY, false);
+			};
+			window.onresize();
+			document.body.appendChild(gamecanvas);
+			NES = new NesNes(gamecanvas);
+			NES.load('roms/Super Mario Bros 3 (E).nes', true);
+		});
+	</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+	"name": "vrNES Server",
+	"description": "NES Emulator - VR ready",
+	"dependencies": {
+		"fs": "0.0.1-security",
+		"nesnes": "^0.3.1",
+		"serve": "^6.4.3"
+	}
+}

@@ -1,0 +1,11 @@
+{
+	"name": "Default Landscape",
+	"version": "1.0-pre1",
+	"credits": ["iPhoneGuy1101"],
+	"controller_textures": {
+		"horizantal": "landscape.png",
+		"vertical": false,
+		"map": "map.json"
+	},
+	"weblink": "/virtualNES2"
+}

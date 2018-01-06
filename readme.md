@@ -1,8 +1,6 @@
 # virtualNES (Customizable* NES for mobile phones)
-  
-  Tested with NodeJS 9.3 - but 8.x and later are going to work for sure, older idk
-  
-  
+
+
    I decided since I was playing around with NES games, to make them work on my phone. It is based off of <a href='https://www.github.com/koenkivits/nesnes'>koenkivit's New ECMA Script Nintendo Entertainment System emulator (NESNes for short).</a>
 
    Please make themes and send them to me (a controller png is enough, just draw a cutout for game's `<canvas>`)
@@ -15,7 +13,7 @@ Todo:
  - More?
 
 Look at the 'default.vt' (default visual theme) folder as a template - and to make yours a repo (so it can be added once I add repo functionality) - make a file 'visualtheme.json' in the root of your domain (so if it was example.com/visualtheme.json, the repo would be example.com) that links to your theme, so mine would be: 
-` {"name": "iPG1101's Repo", themes: ['default.vt']}`
+` {"name": "iPhoneGuy1101's Repo", themes: ['default.vt']}`
   
 
 

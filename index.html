@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>virtNES</title>
+	<title>virtualNES</title>
 	<meta name='mobile-web-app-capable' content='yes' />
+	<link rel='favicon' class='icon' href='default.vt/icon.png' />
+	<link rel='shortcut icon' class='icon' href='default.vt/icon.png' />
+	<link rel='icon' class='icon' href='default.vt/icon.png' />
 	<!--  Because Tim Cook has to be a mental fuckhead...  -->
 	<meta name='apple-mobile-web-app-capable' content='yes' />
-	<meta name='apple-mobile-web-app-title' content='virtNES' />
-	<!--End fuckhead issues - Is a merical godfuckingdammit-->
+	<meta name='apple-mobile-web-app-title' content='virtualNES' />
+	<link rel='apple-touch-icon' class='icon' href='default.vt/icon.png' />
 	<style>
 		body{
 			overflow: hidden;
@@ -21,32 +24,63 @@
 	</style>
 </head>
 <body>
-	<!-- Use this not the one I made for it to work on github -->
-	<!-- script src='node_modules/nesnes/dist/nesnes.js'></script -->
+	<!-- Use this when you compile <script src='node_modules/nesnes/dist/nesnes.js'></script> -->
 	<script src='nesnes.js'></script>
 	<script>
+		let size = {
+			getWidth: function(){
+				if(!!window.navigator.standalone == true) {
+					return document.documentElement.clientWidth;
+					// Apparently Apple made window.innerwidth not the same as clientWidth in a webapp... :/
+				} else {
+					return window.innerWidth;
+				}
+			},
+			getHeight: function(){
+				if(!!window.navigator.standalone == true) {
+					return document.documentElement.clientHeight;
+					// Apparently Apple made window.innerwidth not the same as clientWidth in a webapp... :/
+				} else {
+					return window.innerHeight;
+				}
+			}
+		};
+		let gamecanvas;
 		let wd, hd;
+		let orientation = 'horizantal';
 		const canvas = document.createElement('canvas');
 		const context = canvas.getContext('2d');
 		let NES;
 		document.body.appendChild(canvas);
 		canvas.width = 1334;
 		canvas.height = 750;
-		let ctrl_theme, ctrl_map, background;
-		const loadTheme = function(pack = '/default.vt', onload = function(){}){
-			let theme = new XMLHttpRequest;
+		let ctrl_theme, ctrl_map, background, t, theme;
+		const reloadTheme = function(callback = function(){}){
+			try{
+				loadTheme(t, callback);
+			} catch(e) {
+				e.printStackTrace();
+			}
+		}
+		const loadTheme = function(pack = '/default.vt', onload = function(){}, orientation = size.getWidth()>size.getHeight()?'horizantal':'vertical'){
+			t = pack;
+			theme = new XMLHttpRequest;
 			theme.onreadystatechange = function(){
 				if(this.readyState == 4 && this.status == 200) {
 					try {
 						ctrl_theme = JSON.parse(theme.responseText);
 					} catch(e) {
 						let er = ("Error: \nThis theme is either invalid JSON, or unaccessable at the moment. Please try again later. \n\nError info:\n  "+e.message);
-						alert(er);
 						throw new Error(er); return new Error(er);
 					}
 					background = new Image();
-					background.src = pack + '/' + ctrl_theme.controller_textures.horizantal;
+					let i = document.querySelectorAll('link.icon');
+					for(var h in i) {
+						i[h].href = i[h].src = pack + "/" + ctrl_theme.icon || "/default.vt/";
+					}
+					background.src = pack + '/' + ctrl_theme.controller_textures[orientation];
 					background.onload = function(){
+						context.clearRect(0,0,canvas.width,canvas.height);
 						context.drawImage(background, 0, 0, 1334, 750);
 						let mapLoader = new XMLHttpRequest;
 						mapLoader.open("GET", pack + '/' + ctrl_theme.controller_textures.map);
@@ -56,7 +90,6 @@
 									ctrl_map = JSON.parse(mapLoader.responseText);
 								} catch(e){
 									let er = ("Error: \nThis theme's map is either invalid JSON, or unaccessable at the moment. Please try again later. \n\nError info:\n  "+e.message);
-									alert(er);
 									throw new Error(er); return new Error(er);
 								}
 								onload(ctrl_theme, ctrl_map);
@@ -69,25 +102,33 @@
 			theme.open("GET", pack+"/theme.json", true);
 			theme.send(null);
 		};
-		loadTheme('default.vt', function(theme, map){
-			const gamecanvas = document.createElement('canvas');
-			gamecanvas.style.position = 'absolute';
+
+		gamecanvas = document.createElement('canvas');
+		gamecanvas.style.position = 'absolute';
+		function onthemeload(theme, map){
 			window.onresize = function() {
-					wd = window.innerWidth / 1334;
-					hd = window.innerHeight / 750;
-				gamecanvas.style.left = Math.floor(wd * map.horizantal.canvas[0]) + 'px';
-				gamecanvas.style.top = Math.floor(hd * map.horizantal.canvas[1]) + 'px';
+				let temp = orientation.toString();
+				if(size.getWidth() > size.getHeight()) orientation = 'horizantal';
+				else orientation = 'vertical';
+				// if(orientation != temp) {
+					reloadTheme();
+				// }
+				let v = orientation == 'vertical';
+				wd = size.getWidth() / (v?750:1334);
+				hd = size.getHeight() / ((!v)?750:1334);
+				gamecanvas.style.left = Math.floor(wd * map[orientation].canvas[0]) + 'px';
+				gamecanvas.style.top = Math.floor(hd * map[orientation].canvas[1]) + 'px';
 				gamecanvas.width = 256;
 				gamecanvas.height = 240;
-				gamecanvas.style.width = Math.floor(wd * map.horizantal.canvas[2]) + 'px';
-				gamecanvas.style.height = Math.floor(hd * map.horizantal.canvas[3]) + 'px';
+				gamecanvas.style.width = Math.floor(wd * map[orientation].canvas[2]) + 'px';
+				gamecanvas.style.height = Math.floor(hd * map[orientation].canvas[3]) + 'px';
 			};
 			const click = function(x,y,s){
 				x/=wd;
 				y/=hd;
-				for(let button in map.horizantal) {
+				for(let button in map[orientation]) {
 					if(button != 'canvas') {
-						let b = map.horizantal[button];
+						let b = map[orientation][button];
 						if(x > b[0] && x < b[0] + b[2]
 						&& y > b[1] && y < b[1] + b[3]) {
 							console.log(button, b)
@@ -116,11 +157,55 @@
 				e.preventDefault();
 				click(e.pageX, e.pageY, false);
 			};
+			// window.ondeviceorientation = window.onresize;
 			window.onresize();
 			document.body.appendChild(gamecanvas);
 			NES = new NesNes(gamecanvas);
 			NES.load('roms/Super Mario Bros 3 (E).nes', true);
-		});
+		}
+
+		loadTheme('default.vt', onthemeload);
+
+		// const settings = {
+		// 	"Themes": ['./default.vt'],
+		// 	"ROMs": ['roms/Super Mario Bros 3 (E).nes'],
+		// 	"Repos": [{'name': 'iPhoneGuy1101\'s Repo (Default)', 'url': './'}],
+		// 	"Load ROM": function(rom) {
+		// 		NES.load(rom, true);
+		// 	},
+		// 	"Add repo": function(repo) {
+		// 		let r = new XMLHttpRequest;
+		// 		r.open("GET", repo + '/' + 'visualtheme.json');
+		// 		r.onreadystatechange = function(){
+		// 			if(this.readyState == 4 && this.status == 200) {
+		// 				let j = JSON.parse(r.responseText);
+		// 				if(('themes' in j || 'roms' in j)) {
+		// 					if('themes' in j) {
+		// 						for(var i in j.themes) {
+		// 							settings.Themes.push(repo + '/' + j.themes[i])
+		// 						}
+		// 					}
+		// 					if('roms' in j){
+		// 						for(var i in j.roms) {
+		// 							settings.ROMs.push(repo + '/' + j.roms[i]);
+		// 						}
+		// 					}
+		// 					let n = repo;
+		// 					if('name' in j){
+		// 						n = j.name;
+		// 					}
+		// 					settings.Repos.push({name: n, url: repo, roms: j.roms||[], themes: j.themes||[]});
+		// 				} else {
+		// 					return "Invalid repo address, tell the creator to create a valid 'visualtheme.json'";
+		// 				}
+		// 			} else if(this.status == 404) {
+		// 				return "Invalid repo address, tell the creator to create a 'visualtheme.json'";
+		// 			}
+		// 		};
+		// 		r.send(null);
+		// 		settings.Repos.push(repo);
+		// 	}
+		// };
 	</script>
 </body>
 </html>

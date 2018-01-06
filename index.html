@@ -161,51 +161,14 @@
 			window.onresize();
 			document.body.appendChild(gamecanvas);
 			NES = new NesNes(gamecanvas);
-			NES.load('roms/Super Mario Bros 3 (E).nes', true);
+			let urlGame = document.location.href.toString().split("?");
+			let g = "";
+			if(urlGame.length > 1) g = urlGame[1];
+			else g= 'roms/Super Mario Bros 3 (E).nes'
+			NES.load(g, true);
 		}
 
 		loadTheme('default.vt', onthemeload);
-
-		// const settings = {
-		// 	"Themes": ['./default.vt'],
-		// 	"ROMs": ['roms/Super Mario Bros 3 (E).nes'],
-		// 	"Repos": [{'name': 'iPhoneGuy1101\'s Repo (Default)', 'url': './'}],
-		// 	"Load ROM": function(rom) {
-		// 		NES.load(rom, true);
-		// 	},
-		// 	"Add repo": function(repo) {
-		// 		let r = new XMLHttpRequest;
-		// 		r.open("GET", repo + '/' + 'visualtheme.json');
-		// 		r.onreadystatechange = function(){
-		// 			if(this.readyState == 4 && this.status == 200) {
-		// 				let j = JSON.parse(r.responseText);
-		// 				if(('themes' in j || 'roms' in j)) {
-		// 					if('themes' in j) {
-		// 						for(var i in j.themes) {
-		// 							settings.Themes.push(repo + '/' + j.themes[i])
-		// 						}
-		// 					}
-		// 					if('roms' in j){
-		// 						for(var i in j.roms) {
-		// 							settings.ROMs.push(repo + '/' + j.roms[i]);
-		// 						}
-		// 					}
-		// 					let n = repo;
-		// 					if('name' in j){
-		// 						n = j.name;
-		// 					}
-		// 					settings.Repos.push({name: n, url: repo, roms: j.roms||[], themes: j.themes||[]});
-		// 				} else {
-		// 					return "Invalid repo address, tell the creator to create a valid 'visualtheme.json'";
-		// 				}
-		// 			} else if(this.status == 404) {
-		// 				return "Invalid repo address, tell the creator to create a 'visualtheme.json'";
-		// 			}
-		// 		};
-		// 		r.send(null);
-		// 		settings.Repos.push(repo);
-		// 	}
-		// };
 	</script>
 </body>
 </html>

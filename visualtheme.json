@@ -3,6 +3,7 @@
   "themes": ["default.vt"],
   "roms": [
     {"Super Mario Bros 3": "roms/Super Mario Bros 3 (E).nes"},
+    {"SMB3 MIX (Romhack)": "roms/Super Mario Bros 3. Mix (ROMHACKED).nes"},
     {"Tetris": "roms/Tetris (USA).nes"}
   ]
 }

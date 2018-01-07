@@ -21,10 +21,13 @@
 			width: 100%;
 			height: 100%;
 		}
+		* {
+			font-size: 3vw;
+		}
 	</style>
 </head>
 <body>
-	<!-- Use this when you compile <script src='node_modules/nesnes/dist/nesnes.js'></script> -->
+	<!-- <script src='node_modules/nesnes/dist/nesnes.js'></script> -->
 	<script src='nesnes.js'></script>
 	<script>
 		let size = {
@@ -92,6 +95,7 @@
 									let er = ("Error: \nThis theme's map is either invalid JSON, or unaccessable at the moment. Please try again later. \n\nError info:\n  "+e.message);
 									throw new Error(er); return new Error(er);
 								}
+								settings.cog.src = pack + '/' + ctrl_theme.settings;
 								onload(ctrl_theme, ctrl_map);
 							}
 						};
@@ -107,6 +111,7 @@
 		gamecanvas.style.position = 'absolute';
 		function onthemeload(theme, map){
 			window.onresize = function() {
+		settings.cog.width = settings.cog.height = window.innerWidth * 0.05;
 				let temp = orientation.toString();
 				if(size.getWidth() > size.getHeight()) orientation = 'horizantal';
 				else orientation = 'vertical';
@@ -161,14 +166,141 @@
 			window.onresize();
 			document.body.appendChild(gamecanvas);
 			NES = new NesNes(gamecanvas);
-			let urlGame = document.location.href.toString().split("?");
-			let g = "";
-			if(urlGame.length > 1) g = urlGame[1];
-			else g= 'roms/Super Mario Bros 3 (E).nes'
-			NES.load(g, true);
+			NES.load('roms/Super Mario Bros 3 (E).nes', true);
 		}
 
 		loadTheme('default.vt', onthemeload);
+
+		const settings = {
+			"Themes": ['./default.vt'],
+			"ROMs": ['roms/Super Mario Bros 3 (E).nes', 'roms/Tetris (USA).nes'],
+			"Repos": [],
+			"Load ROM": function(rom) {
+				NES.load(rom, true);
+			},
+			"Add repo": function(repo) {
+				let r = new XMLHttpRequest;
+				r.open("GET", repo + '/' + 'visualtheme.json');
+				r.onreadystatechange = function(){
+					if(this.readyState == 4 && this.status == 200) {
+						let j = JSON.parse(r.responseText);
+						if(('themes' in j || 'roms' in j)) {
+							if('themes' in j) {
+								for(var i in j.themes) {
+									settings.Themes.push(repo + '/' + j.themes[i])
+								}
+							}
+							if('roms' in j){
+								for(var i in j.roms) {
+									settings.ROMs.push(repo + '/' + j.roms[i]);
+								}
+							}
+							let n = repo;
+							if('name' in j){
+								n = j.name;
+							}
+							settings.Repos.push({name: n, url: repo, roms: j.roms||[], themes: j.themes||[]});
+						} else {
+							return "Invalid repo address, tell the creator to create a valid 'visualtheme.json'";
+						}
+					} else if(this.status == 404) {
+						return "Invalid repo address, tell the creator to create a 'visualtheme.json'";
+					}
+				};
+				r.send(null);
+			},
+			cog: new Image()
+		};
+		// settings.cog.src = 'settings.png'
+		settings.cog.style.position = 'absolute';
+		settings.cog.style.right = 0;
+		settings.cog.top = 0;
+		settings.cog.onmousemove = false;
+		let control_panel = document.createElement('div');
+		settings.cog.onclick = function(){
+			control_panel.innerHTML = "Repo Viewer<br/><br/>"
+			control_panel.style.position = 'absolute';
+			control_panel.style.right = control_panel.style.top = '0';
+			control_panel.style.width = '60vw';
+			control_panel.style.height = '60vh';
+			control_panel.style.display = 'block';
+			control_panel.style.background = 'white'
+			control_panel.style.overflowX = 'hidden'
+			for(var i in settings.Repos) {
+				let repo = settings.Repos[i];
+				let repo_ = document.createElement('div');
+				repo_.style.width = '100%';
+				repo_.style.height = '30%';
+				function roms(r){
+					if(r == undefined) return '';
+					let list = "<br/>ROMs: ";
+					let l = [];
+					for(var i in r){
+						for(var j in r[i]) {
+							l.push(j);
+						};
+					};
+					list+=l.join(", ");
+					return list;
+				};
+				function themes(r){
+					if(r == undefined) return '';
+					let list = "<br/>Themes: ";
+					list+=r.join(", ");
+					return list;
+				}
+				let packagescount = ('themes' in repo) ? repo.themes.length : 0;
+				packagescount += ('roms' in repo) ? repo.roms.length : 0;
+				repo_.innerHTML = '<b style="font-size: 160%">'+repo.name+'</b><br/><a style="font-size: 65%">'+repo.url+'</a><br/>Packages: '+(packagescount)+roms(repo.roms)+""+themes(repo.themes);
+				repo_.style.overflow = 'hidden';
+				repo_.style.paddingLeft = '4%';
+				repo_.style.border = 'solid 2px black';
+				repo_.onclick = function(){
+					control_panel.innerHTML = repo.name+'<br/><br/>';
+					if(repo.roms instanceof Array) {
+						control_panel.innerHTML += "ROMs: "
+						for(var i in repo.roms) {
+							for(var j in repo.roms[i]) {
+								control_panel.innerHTML += "<br/> &nbsp; &nbsp; Launch <b onclick='NES.load(\""+repo.roms[i][j]+"\", true)'>"+j+"</b>";
+							}
+						}
+					}
+					if(repo.themes instanceof Array) {
+						control_panel.innerHTML += "<br/><br/>Themes: "
+						for(var i in repo.themes) {
+							control_panel.innerHTML += "<br/>  &nbsp; &nbsp; Enable <b onclick=\"loadTheme(\'"+repo.themes[i]+"\', onthemeload)\">"+repo.themes[i]+"</b> theme"
+						}
+					}
+					control_panel.appendChild(close);
+				};
+				control_panel.appendChild(repo_)
+			}
+			let addrepo = document.createElement('div');
+			addrepo.style.width = '100%';
+			addrepo.style.bottom = 0;
+			addrepo.style.height = '20%';
+			addrepo.innerText = "   Add repo";
+			addrepo.onclick = function(){
+				let r = prompt("Type in REPO IP: ","https://") || "invalid";
+				settings['Add repo'](r);
+			};
+			let close = document.createElement('div');
+			close.style.width = '100%';
+			close.style.bottom = 0;
+			close.style.height = '10%';
+			close.onclick = function(){
+				document.body.removeChild(control_panel);
+			};
+			close.style.border = 'solid 2px black'
+			close.innerText = "Close repo viewer";
+			control_panel.appendChild(addrepo);
+			control_panel.appendChild(close);
+			// control_panel.appendChild(close);
+			// con
+			document.body.appendChild(control_panel);
+		};
+		settings['Add repo']('https://iPG1101.github.io/virtualNES2');
+		document.body.appendChild(settings.cog);
 	</script>
 </body>
 </html>
